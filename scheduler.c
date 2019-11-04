@@ -41,8 +41,8 @@ static void wait_for_queue();
  */
 void update_run_time(thread_info_t *info) {
         /* TODO: implement this function */
-		clock_gettime(CLOCK_REALTIME,&info->suspend_time);
-		info->run_time += time_difference(info->suspend_time,info->resume_time);
+	clock_gettime(CLOCK_REALTIME,&info->suspend_time);
+	info->run_time += time_difference(&info->suspend_time,&info->resume_time);
 
 }
 
@@ -53,7 +53,7 @@ void update_run_time(thread_info_t *info) {
 void update_wait_time(thread_info_t *info) {
         /* TODO: implement this function */
 		clock_gettime(CLOCK_REALTIME,&info->resume_time);
-		info->wait_time +=time_difference(info->resume_time,info->suspend_time);
+		info->wait_time +=time_difference(&info->resume_time,&info->suspend_time);
 }
 
 
@@ -209,11 +209,11 @@ void setup_sig_handlers() {
 	sigaction(SIGALRM,act_timer,NULL);
 	/* Setup cancel handler for SIGTERM signal in workers */
 	struct sigaction *act_cancel = (struct sigaction*)malloc(sizeof(struct sigaction));
-	act_timer->sa_handler = cancel_thread;
+	act_cancel->sa_handler = cancel_thread;
 	sigaction(SIGTERM,act_cancel,NULL);
 	/* Setup suspend handler for SIGUSR1 signal in workers */
 	struct sigaction *act_suspend = (struct sigaction*)malloc(sizeof(struct sigaction));
-	act_timer->sa_handler = suspend_thread;
+	act_suspend->sa_handler = suspend_thread;
 	sigaction(SIGUSR1,act_suspend,NULL);
 }
 
@@ -314,7 +314,7 @@ static void *scheduler_run(void *unused)
     it.it_interval.tv_nsec = 0;  
     it.it_value.tv_sec = QUANTUM;  
     it.it_value.tv_nsec = 0;
-	 if(timer_settime(&timer,0, &it, NULL)!=0){
+	 if(timer_settime(timer,0, &it, NULL)!=0){
 		 fprintf(stderr,"timer_settime error!\n");
 	 }
 
